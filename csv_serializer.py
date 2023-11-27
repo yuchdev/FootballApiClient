@@ -1,8 +1,23 @@
 import argparse
+import csv
 import json
+import os
 
-leagues_simplified = 'data/leagues_simplified.json'
-seasons_simplified = 'data/seasons_simplified.json'
+
+class CsvSerializer:
+    def __init__(self, data_dir):
+        self.data_dir = data_dir
+
+    def serialize(self, data):
+        file_path = os.path.join(self.data_dir, "leagues_simplified.tsv")
+        with open(file_path, "w", newline="", encoding="utf-8") as tsv_file:
+            writer = csv.writer(tsv_file, delimiter="\t")
+            # Write header
+            writer.writerow(["id", "name", "type," "country", "seasons"])
+            # Write data
+            for item in data:
+                writer.writerow([item["id"], item["name"], item["country"], ", ".join(map(str, item["seasons"]))])
+        print("Serialized data to TSV.")
 
 
 def create_table(input_file, output_file, fields, column_names):
@@ -32,22 +47,3 @@ def create_table(input_file, output_file, fields, column_names):
             output_file.write('\t'.join(row) + '\n')
 
     print("Table has been created successfully.")
-
-
-def main():
-    # Set up command-line argument parser
-    parser = argparse.ArgumentParser(description='Convert JSON data to a TSV table.')
-    parser.add_argument('input_file', help='Input JSON file name')
-    parser.add_argument('output_file', help='Output TSV file name')
-    parser.add_argument('--fields', nargs='+', help='Fields to read from JSON', required=True)
-    parser.add_argument('--column-names', nargs='+', help='Column names in TSV file', required=True)
-
-    # Parse command-line arguments
-    args = parser.parse_args()
-
-    # Call the function to create the table
-    create_table(args.input_file, args.output_file, args.fields, args.column_names)
-
-
-if __name__ == '__main__':
-    main()
