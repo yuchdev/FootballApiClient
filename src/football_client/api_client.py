@@ -2,8 +2,8 @@ import http.client
 import json
 import os.path
 from api_key import API_KEY
-from json_serializer import JsonSerializer
-from csv_serializer import CsvSerializer
+from football_client.json_serializer import JsonSerializer
+from football_client.csv_serializer import CsvSerializer
 
 headers = {
     'x-rapidapi-host': "v3.football.api-sports.io",

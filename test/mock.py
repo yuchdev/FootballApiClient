@@ -2,7 +2,7 @@ import json
 import os
 import unittest
 from unittest.mock import patch, MagicMock
-from world_leagues import WorldLeagues
+from football_client.api_client import WorldLeagues
 
 
 class TestWorldLeagues(unittest.TestCase):
@@ -25,7 +25,7 @@ class TestWorldLeagues(unittest.TestCase):
         world_leagues = WorldLeagues(serializer='json')
 
         # Call the get_league method
-        result = world_leagues.get_league(league_id=1)
+        result = world_leagues.get_league(league_id=4)
 
         # Assert the result
         self.assertEqual(result, {'league': {'id': 1, 'name': 'Mock League'}})

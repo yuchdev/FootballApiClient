@@ -4,12 +4,11 @@ import sys
 import pathlib
 from setuptools import find_packages, setup
 from configparser import ConfigParser
-# noinspection PyUnresolvedReferences,PyPackageRequirements
-from version import VERSION
 
 # Package-wide name
 cfg = ConfigParser()
 cfg.read(filenames=['setup.cfg'])
+VERSION = cfg.get('metadata', 'version')
 
 # Home dir
 HOME = pathlib.Path.home()
