@@ -9,18 +9,43 @@ headers = {
     'x-rapidapi-key': API_KEY
 }
 
-
 SERIALIZERS = {
     "json": JsonSerializer,
-    "csv": CsvSerializer
+    "tsv": CsvSerializer
 }
 
 
-class WorldLeagues:
+class World:
+    """
+    Get information about leagues and countries
+    """
+
     def __init__(self, serializer: str):
         self.leagues = {}
+        self.countries = {}
         self.data_dir = DATA_DIR
-        self.serializer = SERIALIZERS.get(serializer, JsonSerializer)(self.data_dir)
+        self.serializers = {
+            "leagues": self.create_serializer(serializer=serializer, entity="leagues"),
+            "countries": self.create_serializer(serializer=serializer, entity="countries")
+        }
+
+    def create_serializer(self, serializer, entity: str):
+        return SERIALIZERS.get(serializer, JsonSerializer)(self.data_dir, f"{entity}.{serializer}")
+
+    def _request(self, entity):
+        conn = http.client.HTTPSConnection("v3.football.api-sports.io")
+        endpoint = f"/{entity}"
+        conn.request("GET", endpoint, headers=headers)
+        result = conn.getresponse()
+        result_data = result.read()
+        leagues_data = json.loads(result_data)
+
+        # Check for API errors
+        if "errors" in leagues_data and len(leagues_data["errors"]):
+            raise Exception(f"API Error: {leagues_data['errors']}")
+
+        self.serializers[entity].write(data=leagues_data)
+        return leagues_data
 
     def get_league(self, league_id=None, league_name=None):
         """
@@ -33,43 +58,44 @@ class WorldLeagues:
         print(f"Getting league information for {league_id or league_name}")
         if not self.leagues:
             print("No cached leagues data. Trying to read from serialized data...")
-            self.leagues = self.serializer.read()
+            self.leagues = self.serializers['leagues'].read()
 
-            if not self.leagues:
-                print("Serialized data is empty or not found. Fetching from API...")
-                self.leagues = self._request()
+        if not self.leagues:
+            print("Serialized data is empty or not found. Fetching from API...")
+            self.leagues = self._request("leagues")
 
         for lg in self.leagues['response']:
             if (league_id and lg["league"]["id"] == league_id) or (league_name and lg["league"]["name"] == league_name):
                 return lg
         return {}
 
-    def _request(self):
-        conn = http.client.HTTPSConnection("v3.football.api-sports.io")
-        endpoint = "/leagues"
-        conn.request("GET", endpoint, headers=headers)
-        result = conn.getresponse()
-        result_data = result.read()
-        leagues_data = json.loads(result_data)
+    def get_country(self, country_name=None, country_code=None):
+        """
+        Get country
+        :return: dict
+        """
+        print(f"Getting country information for {country_name or country_code}")
+        if not self.countries:
+            print("No cached countries data. Trying to read from serialized data...")
+            self.countries = self.serializers['countries'].read()
 
-        # Check for API errors
-        if "errors" in leagues_data and len(leagues_data["errors"]):
-            raise Exception(f"API Error: {leagues_data['errors']}")
+        if not self.countries:
+            print("Serialized data is empty or not found. Fetching from API...")
+            self.countries = self._request("countries")
 
-        self.serializer.write(data=leagues_data)
-        return leagues_data
+        for country in self.countries['response']:
+            if (country_name and country["name"] == country_name) or (
+                    country_code and country["code"] == country_code):
+                return country
+        return {}
 
-    def by_id(self, league_id):
-        assert isinstance(league_id, int), "League ID must be an integer"
-        return self.get_league(league_id=league_id)
+    def all_leagues(self):
+        self.get_league()
+        return self.leagues["response"]
 
-    def by_name(self, league_name):
-        assert isinstance(league_name, str), "League name must be a string"
-        return self.get_league(league_name=league_name)
-
-    def all(self):
-        leagues_data = self.get_league()
-        return leagues_data["response"]
+    def all_countries(self):
+        self.get_country()
+        return self.countries["response"]
 
 
 class League:

@@ -62,9 +62,9 @@ class JsonSerializer:
         "leagues": LeaguesMixin
     }
 
-    def __init__(self, data_dir):
+    def __init__(self, data_dir, file_name):
         self.data_dir = data_dir
-        self.leagues_file = os.path.join(self.data_dir, "leagues.json")
+        self.leagues_file = os.path.join(self.data_dir, file_name)
 
     def write(self, data):
         """
@@ -74,8 +74,12 @@ class JsonSerializer:
             json.dump(data, json_file, indent=4)
         entity = data["get"]
         print(f"Load mixin for {entity}")
-        self.MIXINS[entity]().write(data)
-        print("Serialized data to JSON")
+        mixin = self.MIXINS.get(entity, None)
+        if mixin:
+            mixin(self.data_dir).write(data)
+            print("Serialized data to JSON")
+        else:
+            print("No specific mixin found")
 
     def read(self):
         """

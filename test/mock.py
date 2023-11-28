@@ -2,7 +2,7 @@ import json
 import os
 import unittest
 from unittest.mock import patch, MagicMock
-from football_client.api_client import WorldLeagues
+from football_client.api_client import World
 
 
 class TestWorldLeagues(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestWorldLeagues(unittest.TestCase):
         mock_connection_instance.getresponse.return_value = mock_response
 
         # Create an instance of WorldLeagues
-        world_leagues = WorldLeagues(serializer='json')
+        world_leagues = World(serializer='json')
 
         # Call the get_league method
         result = world_leagues.get_league(league_id=4)
@@ -48,7 +48,7 @@ class TestWorldLeagues(unittest.TestCase):
         mock_connection_instance.getresponse.return_value = mock_response
 
         # Create an instance of WorldLeagues
-        world_leagues = WorldLeagues(serializer='json')
+        world_leagues = World(serializer='json')
 
         # Call the get_league method
         result = world_leagues.get_league(league_id=1)
