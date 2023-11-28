@@ -64,7 +64,7 @@ class JsonSerializer:
 
     def __init__(self, data_dir, file_name):
         self.data_dir = data_dir
-        self.leagues_file = os.path.join(self.data_dir, file_name)
+        self.leagues_file = os.path.join(self.data_dir, f"{file_name}.json")
 
     def write(self, data):
         """

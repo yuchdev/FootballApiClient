@@ -11,7 +11,7 @@ headers = {
 
 SERIALIZERS = {
     "json": JsonSerializer,
-    "tsv": CsvSerializer
+    "csv": CsvSerializer
 }
 
 
@@ -30,9 +30,17 @@ class World:
         }
 
     def create_serializer(self, serializer, entity: str):
-        return SERIALIZERS.get(serializer, JsonSerializer)(self.data_dir, f"{entity}.{serializer}")
+        """
+        Create serializer of the given type for the given entity
+        """
+        return SERIALIZERS.get(serializer, JsonSerializer)(self.data_dir, entity)
 
     def _request(self, entity):
+        """
+        Request data from API
+        :param entity: e.g. leagues
+        :return: dict
+        """
         conn = http.client.HTTPSConnection("v3.football.api-sports.io")
         endpoint = f"/{entity}"
         conn.request("GET", endpoint, headers=headers)
@@ -84,8 +92,7 @@ class World:
             self.countries = self._request("countries")
 
         for country in self.countries['response']:
-            if (country_name and country["name"] == country_name) or (
-                    country_code and country["code"] == country_code):
+            if (country_name and country["name"] == country_name) or (country_code and country["code"] == country_code):
                 return country
         return {}
 
