@@ -64,13 +64,13 @@ class JsonSerializer:
 
     def __init__(self, data_dir, file_name):
         self.data_dir = data_dir
-        self.leagues_file = os.path.join(self.data_dir, f"{file_name}.json")
+        self.serialized_file = os.path.join(self.data_dir, f"{file_name}.json")
 
     def write(self, data):
         """
         Serialize data to JSON
         """
-        with open(self.leagues_file, "w") as json_file:
+        with open(self.serialized_file, "w") as json_file:
             json.dump(data, json_file, indent=4)
         entity = data["get"]
         print(f"Load mixin for {entity}")
@@ -87,8 +87,8 @@ class JsonSerializer:
         :return: dict
         """
         leagues_data = {}
-        if not os.path.exists(self.leagues_file):
+        if not os.path.exists(self.serialized_file):
             return leagues_data
-        with open(self.leagues_file, "r") as json_file:
+        with open(self.serialized_file, "r") as json_file:
             leagues_data = json.load(json_file)
         return leagues_data

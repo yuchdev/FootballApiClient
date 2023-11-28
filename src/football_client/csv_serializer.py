@@ -1,23 +1,30 @@
-import argparse
 import csv
 import json
 import os
 
 
 class CsvSerializer:
-    def __init__(self, data_dir):
+    def __init__(self, data_dir, file_name, settings):
         self.data_dir = data_dir
+        self.delimiter = settings.get("delimiter", "\t")
+        self.headers = settings.get("headers", [])
+        self.columns = settings.get("columns", [])
+        self.serialized_file = os.path.join(self.data_dir, f"{file_name}.tsv")
 
-    def serialize(self, data):
-        file_path = os.path.join(self.data_dir, "leagues_simplified.tsv")
-        with open(file_path, "w", newline="", encoding="utf-8") as tsv_file:
+    def write(self, data):
+        with open(self.serialized_file, "w", newline="", encoding="utf-8") as tsv_file:
             writer = csv.writer(tsv_file, delimiter="\t")
             # Write header
-            writer.writerow(["id", "name", "type," "country", "seasons"])
+            writer.writerow(["ID", "Name", "Type," "Country", "Seasons"])
             # Write data
             for item in data:
                 writer.writerow([item["id"], item["name"], item["country"], ", ".join(map(str, item["seasons"]))])
         print("Serialized data to TSV.")
+
+    def read(self):
+        with open(self.serialized_file, "r", newline="", encoding="utf-8") as tsv_file:
+            reader = csv.DictReader(tsv_file, delimiter="\t")
+            return [row for row in reader]
 
 
 def create_table(input_file, output_file, fields, column_names):

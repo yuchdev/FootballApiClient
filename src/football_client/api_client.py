@@ -4,11 +4,11 @@ from football_client.settings import API_KEY, DATA_DIR
 from football_client.json_serializer import JsonSerializer
 from football_client.csv_serializer import CsvSerializer
 
-headers = {
-    'x-rapidapi-host': "v3.football.api-sports.io",
+API_HOST = "v3.football.api-sports.io"
+HEADERS = {
+    'x-rapidapi-host': API_HOST,
     'x-rapidapi-key': API_KEY
 }
-
 SERIALIZERS = {
     "json": JsonSerializer,
     "csv": CsvSerializer
@@ -24,16 +24,23 @@ class World:
         self.leagues = {}
         self.countries = {}
         self.data_dir = DATA_DIR
+        # Use for caching in data directory
+        self.caching = {
+            "leagues": self._create_serializer(serializer="json", entity="leagues"),
+            "countries": self._create_serializer(serializer="json", entity="countries")
+        }
+        # Use for serializing to user-specified format
         self.serializers = {
-            "leagues": self.create_serializer(serializer=serializer, entity="leagues"),
-            "countries": self.create_serializer(serializer=serializer, entity="countries")
+            "leagues": self._create_serializer(serializer=serializer, entity="leagues"),
+            "countries": self._create_serializer(serializer=serializer, entity="countries")
         }
 
-    def create_serializer(self, serializer, entity: str):
+    def _create_serializer(self, serializer: str, entity: str):
         """
         Create serializer of the given type for the given entity
         """
-        return SERIALIZERS.get(serializer, JsonSerializer)(self.data_dir, entity)
+        assert serializer in SERIALIZERS, f"Serializer {serializer} is not supported"
+        return SERIALIZERS[serializer](self.data_dir, entity)
 
     def _request(self, entity):
         """
@@ -41,19 +48,22 @@ class World:
         :param entity: e.g. leagues
         :return: dict
         """
-        conn = http.client.HTTPSConnection("v3.football.api-sports.io")
+        conn = http.client.HTTPSConnection(API_HOST)
         endpoint = f"/{entity}"
-        conn.request("GET", endpoint, headers=headers)
+        conn.request("GET", endpoint, headers=HEADERS)
         result = conn.getresponse()
-        result_data = result.read()
-        leagues_data = json.loads(result_data)
+        result_data = json.loads(result.read())
 
         # Check for API errors
-        if "errors" in leagues_data and len(leagues_data["errors"]):
-            raise Exception(f"API Error: {leagues_data['errors']}")
+        if "errors" in result_data and len(result_data["errors"]):
+            raise Exception(f"API Error: {result_data['errors']}")
 
-        self.serializers[entity].write(data=leagues_data)
-        return leagues_data
+        # Cache the data
+        # TODO: split caching and serialization into separate abstract layers
+        self.caching[entity].write(data=result_data)
+        self.serializers[entity].write(data=result_data)
+
+        return result_data
 
     def get_league(self, league_id=None, league_name=None):
         """
@@ -66,7 +76,7 @@ class World:
         print(f"Getting league information for {league_id or league_name}")
         if not self.leagues:
             print("No cached leagues data. Trying to read from serialized data...")
-            self.leagues = self.serializers['leagues'].read()
+            self.leagues = self.caching['leagues'].read()
 
         if not self.leagues:
             print("Serialized data is empty or not found. Fetching from API...")
@@ -85,7 +95,7 @@ class World:
         print(f"Getting country information for {country_name or country_code}")
         if not self.countries:
             print("No cached countries data. Trying to read from serialized data...")
-            self.countries = self.serializers['countries'].read()
+            self.countries = self.caching['countries'].read()
 
         if not self.countries:
             print("Serialized data is empty or not found. Fetching from API...")
