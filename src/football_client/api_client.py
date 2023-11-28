@@ -1,7 +1,6 @@
 import http.client
 import json
-import os.path
-from api_key import API_KEY
+from football_client.settings import API_KEY, DATA_DIR
 from football_client.json_serializer import JsonSerializer
 from football_client.csv_serializer import CsvSerializer
 
@@ -20,7 +19,7 @@ SERIALIZERS = {
 class WorldLeagues:
     def __init__(self, serializer: str):
         self.leagues = {}
-        self.data_dir = os.path.join(os.path.dirname(__file__), "data")
+        self.data_dir = DATA_DIR
         self.serializer = SERIALIZERS.get(serializer, JsonSerializer)(self.data_dir)
 
     def get_league(self, league_id=None, league_name=None):

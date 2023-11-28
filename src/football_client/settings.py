@@ -15,4 +15,18 @@ def get_api_key():
                         "in ~/.football_api/.api_key.json with the API key.")
 
 
+def get_data_dir():
+    """
+    Get the data directory
+    Create if it doesn't exist
+    """
+    data_dir = os.environ.get("FOOTBALL_DATA_DIR")
+    if not data_dir:
+        data_dir = os.path.join(os.path.expanduser("~"), ".football_api", "data")
+    if not os.path.isdir(data_dir):
+        os.makedirs(data_dir)
+    return data_dir
+
 API_KEY = get_api_key()
+DATA_DIR = get_data_dir()
+

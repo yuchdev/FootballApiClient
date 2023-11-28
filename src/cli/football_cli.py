@@ -1,6 +1,6 @@
 import argparse
 import sys
-from api_client import WorldLeagues
+from football_client.api_client import WorldLeagues
 
 
 def extract_id(value):
