@@ -52,20 +52,20 @@ class LeaguesJsonSerializer(JsonSerializer):
     def __init__(self, data_dir):
         super().__init__(data_dir, file_name="leagues", settings=None)
 
-    def write(self, leagues_data):
+    def write(self, data):
         """
         Serialize leagues data to JSON and additional simplified files
         """
-        super().write(leagues_data)  # Call the base class write method
+        super().write(data)  # Call the base class write method
 
         leagues_simplified_file = os.path.join(self.data_dir, "leagues_simplified.json")
         seasons_simplified_file = os.path.join(self.data_dir, "seasons_simplified.json")
         with open(leagues_simplified_file, "w") as leagues_json_f:
-            json.dump(self._write_leagues(leagues_data), leagues_json_f, indent=4)
-        with open(seasons_simplified_file, "w") as seasons_json_f:
-            json.dump(self._write_seasons(leagues_data), seasons_json_f, indent=4)
-
+            json.dump(self._write_leagues(data), leagues_json_f, indent=4)
         print(f"Serialized simplified leagues data to {leagues_simplified_file}")
+        with open(seasons_simplified_file, "w") as seasons_json_f:
+            json.dump(self._write_seasons(data), seasons_json_f, indent=4)
+        print(f"Serialized simplified seasons data to {seasons_simplified_file}")
 
     @staticmethod
     def _write_leagues(leagues_data):

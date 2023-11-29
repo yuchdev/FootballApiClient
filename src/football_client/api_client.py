@@ -31,6 +31,16 @@ class World:
             "countries": self._create_serializer(serializer=serializer, entity="countries")
         }
 
+    def to_plural(self, entity: str):
+        """
+        Convert plural to singular, e.g. leagues -> league
+        """
+        pairs = {
+            "league": "leagues",
+            "country": "countries"
+        }
+        return pairs.get(entity, entity)
+
     def _create_serializer(self, serializer: str, entity: str):
         """
         Create serializer of the given type for the given entity, e.g. LeaguesJsonSerializer
@@ -38,6 +48,13 @@ class World:
         serializer_cls = self.factory.create_serializer(serializer_type=serializer, entity=entity)
         print(f"Created serializer: {serializer_cls.__class__.__name__}")
         return serializer_cls
+
+    def serialize(self, entity: str, data: dict):
+        """
+        Serialize data to the user-specified format
+        """
+        entity = self.to_plural(entity)
+        self.serializers[entity].write(data=data)
 
     def _request(self, entity):
         """
@@ -56,9 +73,7 @@ class World:
             raise Exception(f"API Error: {result_data['errors']}")
 
         # Cache the data
-        # TODO: split caching and serialization into separate abstract layers
         self.caching[entity].write(data=result_data)
-        self.serializers[entity].write(data=result_data)
 
         return result_data
 

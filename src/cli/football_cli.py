@@ -56,18 +56,24 @@ class FootballClientApp:
     def all_leagues(self):
         print(f"Getting leagues information")
         world_leagues = World(serializer=self.serializer)
-        return world_leagues.all_leagues()
+        result = world_leagues.all_leagues()
+        # world_leagues.serialize(entity='leagues', data=result)
+        return result
 
     def all_countries(self):
         print(f"Getting countries information")
         world_leagues = World(serializer=self.serializer)
-        return world_leagues.all_countries()
+        result = world_leagues.all_countries()
+        world_leagues.serialize(entity='countries', data=result)
+        return result
 
     def get_league(self, identifier):
         print(f"Getting league information for {identifier}")
         entity_id, entity_name = extract_id(identifier)
         world_leagues = World(serializer=self.serializer)
-        return world_leagues.get_league(league_id=entity_id, league_name=entity_name)
+        result = world_leagues.get_league(league_id=entity_id, league_name=entity_name)
+        # world_leagues.serialize(entity='league', data=result)
+        return result
 
     def get_team(self, identifier, season=None, league_id=None):
         print(f"Getting team information for {identifier} in season {season}")
@@ -93,9 +99,6 @@ def main():
     # Subparsers for different commands
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
-    parser.add_argument('--serializer', choices=['json', 'csv'], default='json',
-                        help='Output format for the data')
-
     # Command: get
     parser_get = subparsers.add_parser('get', help='Get league, team, or player by ID or name')
 
@@ -117,22 +120,27 @@ def main():
                             help='ID of the league (required for players and teams)')
     parser_all.add_argument('--season', type=int,
                             help='Season year (required for players and teams)')
+    parser_all.add_argument('--serializer', choices=['json', 'csv'], default='json',
+                            help='Output format for the data')
 
     args = parser.parse_args()
     sanity_check(args)
-    app = FootballClientApp(action=args.action,
-                            entity=args.entity,
-                            serializer=args.serializer)
 
+    # Create a dictionary with non-None values
+    print(args)
     kwargs = {
         attr: getattr(args, attr) for attr in ['identifier', 'league_id', 'season']
         if hasattr(args, attr) and getattr(args, attr) is not None
     }
-    found = app.search(**kwargs)
-    if isinstance(found, list):
-        print(f"Found {len(found)} {args.entity}")
-    elif isinstance(found, dict):
-        print(found)
+    print(kwargs)
+    app = FootballClientApp(action=args.action,
+                            entity=args.entity,
+                            serializer=args.serializer if hasattr(args, 'serializer') else 'json')
+    found_results = app.search(**kwargs)
+    if isinstance(found_results, list):
+        print(f"Found {len(found_results)} {args.entity}")
+    elif isinstance(found_results, dict):
+        print(found_results)
     else:
         print("No results found")
     return 0
