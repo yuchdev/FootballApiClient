@@ -34,7 +34,7 @@ class FootballClientApp:
     CLI for Football API
     """
 
-    def __init__(self, action, entity):
+    def __init__(self, action, entity, serializer):
         self.get_dispatch = {
             'countries': self.all_countries,
             'league': self.get_league,
@@ -45,6 +45,7 @@ class FootballClientApp:
         }
         self.action = action
         self.entity = entity
+        self.serializer = serializer
 
     def search(self, **kwargs):
         """
@@ -52,23 +53,20 @@ class FootballClientApp:
         """
         return self.get_dispatch[self.entity](**kwargs)
 
-    @staticmethod
-    def all_leagues():
+    def all_leagues(self):
         print(f"Getting leagues information")
-        world_leagues = World(serializer="json")
+        world_leagues = World(serializer=self.serializer)
         return world_leagues.all_leagues()
 
-    @staticmethod
-    def all_countries():
+    def all_countries(self):
         print(f"Getting countries information")
-        world_leagues = World(serializer="json")
+        world_leagues = World(serializer=self.serializer)
         return world_leagues.all_countries()
 
-    @staticmethod
-    def get_league(identifier):
+    def get_league(self, identifier):
         print(f"Getting league information for {identifier}")
         entity_id, entity_name = extract_id(identifier)
-        world_leagues = World(serializer="json")
+        world_leagues = World(serializer=self.serializer)
         return world_leagues.get_league(league_id=entity_id, league_name=entity_name)
 
     def get_team(self, identifier, season=None, league_id=None):
@@ -95,6 +93,9 @@ def main():
     # Subparsers for different commands
     subparsers = parser.add_subparsers(dest='action', help='Available commands')
 
+    parser.add_argument('--serializer', choices=['json', 'csv'], default='json',
+                        help='Output format for the data')
+
     # Command: get
     parser_get = subparsers.add_parser('get', help='Get league, team, or player by ID or name')
 
@@ -120,13 +121,20 @@ def main():
     args = parser.parse_args()
     sanity_check(args)
     app = FootballClientApp(action=args.action,
-                            entity=args.entity)
+                            entity=args.entity,
+                            serializer=args.serializer)
+
     kwargs = {
-        key: value for key, value in
-        {"identifier": args.identifier, "season": args.season, "league_id": args.league_id}.items() if value is not None
+        attr: getattr(args, attr) for attr in ['identifier', 'league_id', 'season']
+        if hasattr(args, attr) and getattr(args, attr) is not None
     }
     found = app.search(**kwargs)
-    print(found)
+    if isinstance(found, list):
+        print(f"Found {len(found)} {args.entity}")
+    elif isinstance(found, dict):
+        print(found)
+    else:
+        print("No results found")
     return 0
 
 

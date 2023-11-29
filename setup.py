@@ -74,7 +74,9 @@ setup(
         'Development Status :: 4 - Beta',
 
         # Indicate who your project is intended for
-        'Intended Audience :: Developers :: Data Scientists',
+        'Intended Audience :: Developers',
+        "Intended Audience :: End Users/Desktop",
+        "Intended Audience :: Science/Research",
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate you support Python 3. These classifiers are *not*

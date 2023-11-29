@@ -1,17 +1,12 @@
 import http.client
 import json
 from football_client.settings import API_KEY, DATA_DIR
-from football_client.json_serializer import JsonSerializer
-from football_client.csv_serializer import CsvSerializer
+from football_client.serializer_factory import SerializerFactory
 
 API_HOST = "v3.football.api-sports.io"
 HEADERS = {
     'x-rapidapi-host': API_HOST,
     'x-rapidapi-key': API_KEY
-}
-SERIALIZERS = {
-    "json": JsonSerializer,
-    "csv": CsvSerializer
 }
 
 
@@ -24,6 +19,7 @@ class World:
         self.leagues = {}
         self.countries = {}
         self.data_dir = DATA_DIR
+        self.factory = SerializerFactory(self.data_dir)
         # Use for caching in data directory
         self.caching = {
             "leagues": self._create_serializer(serializer="json", entity="leagues"),
@@ -37,10 +33,11 @@ class World:
 
     def _create_serializer(self, serializer: str, entity: str):
         """
-        Create serializer of the given type for the given entity
+        Create serializer of the given type for the given entity, e.g. LeaguesJsonSerializer
         """
-        assert serializer in SERIALIZERS, f"Serializer {serializer} is not supported"
-        return SERIALIZERS[serializer](self.data_dir, entity)
+        serializer_cls = self.factory.create_serializer(serializer_type=serializer, entity=entity)
+        print(f"Created serializer: {serializer_cls.__class__.__name__}")
+        return serializer_cls
 
     def _request(self, entity):
         """
